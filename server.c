@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 
 	fd_set read_fds;	// Reading multitude used in select().
 	fd_set tmp_fds;		// Temporary used multitude.
-	int fdmax;			// Max value from read_fds multitude.
+	int fdmax;		// Max value from read_fds multitude.
 
 	if (argc < 2) {
 		usage(argv[0]);
@@ -103,33 +103,33 @@ int main(int argc, char *argv[]) {
                         stop = 1;
                         for (int sockj = 1; sockj <= fdmax; sockj++) {
                             if (FD_ISSET(sockj, &read_fds)
-								&& sockj != sockfd_tcp
-								&& sockj != sockfd_udp) {
+				&& sockj != sockfd_tcp
+				&& sockj != sockfd_udp) {
                                 memset(buffer, 0, BUFLEN);
                                 strcpy(buffer, "exit");
                                 send(sockj, buffer, strlen(buffer), 0);
                                 /* Removing from socket multitude the closed
-								socket. */
+				socket. */
                                 FD_CLR(sockj, &read_fds);
                             }
                         }
-						// This is keyboard reading socket.
+			// This is keyboard reading socket.
                         FD_CLR(0, &read_fds);
                         break;
                     }
 
                 } else if (sockId == sockfd_udp) {
                     // Received message from an UDP client.
-					memset(buffer, 0, BUFLEN);
+		    memset(buffer, 0, BUFLEN);
                     addrlen = sizeof(from_station);
                     bytes_read = recvfrom(sockId, buffer, BUFLEN, 0,
-										(struct sockaddr *)&from_station,
-										&addrlen);
+					(struct sockaddr *)&from_station,
+					&addrlen);
                     DIE(bytes_read == -1, "recvfrom");
 
                     /* Add IP, PORT and topic to msg. (Same steps regardless
                     of type) */
-        			memset(msg, 0, BUFLEN);
+        	    memset(msg, 0, BUFLEN);
                     strcpy(msg, inet_ntoa(from_station.sin_addr));
                     char str_helper[40];
 
@@ -139,8 +139,8 @@ int main(int argc, char *argv[]) {
                     topic[TYPE_OFF] = '\0';
 
                     sprintf(str_helper, ":%d - %s - ",
-                                                ntohs(from_station.sin_port),
-                                                topic);
+                            ntohs(from_station.sin_port),
+                            topic);
                     strcat(msg, str_helper);
                     // --------------------------------------------------------
 
@@ -160,7 +160,7 @@ int main(int argc, char *argv[]) {
                         int value = 0;
                         for (int i = 0; i < sizeof(value); i++) {
                             value += (unsigned char)offset[i]
-									<< (8 * ((sizeof(value) - 1) - i));
+				   << (8 * ((sizeof(value) - 1) - i));
                         }
 
                         // Setting offset to point sign.
@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
                         __uint16_t value = 0;
                         for (int i = 0; i < sizeof(value); i++) {
                             value += (unsigned char)offset[i]
-									<< (8 * ((sizeof(value) - 1) - i));
+				   << (8 * ((sizeof(value) - 1) - i));
                         }
 
                         int toDivideBy = 100;
@@ -203,7 +203,7 @@ int main(int argc, char *argv[]) {
                         __uint32_t value = 0;
                         for (int i = 0; i < sizeof(value); i++) {
                             value += (unsigned char)offset[i]
-									<< (8 * ((sizeof(value) - 1) - i));
+				   << (8 * ((sizeof(value) - 1) - i));
                         }
 
                         // Getting power to divide by.
@@ -224,14 +224,14 @@ int main(int argc, char *argv[]) {
 
                             } else {
                                 sprintf(str_helper, "-%d.%.*d", part1, pow,
-																part2);
+					part2);
                             }
                         } else {
                             if (pow == 0) {
                                 sprintf(str_helper, "%d", part1);
                             } else {
                                 sprintf(str_helper, "%d.%.*d", part1,
-																pow, part2);
+					pow, part2);
                             }
                         }
                         strcat(msg, str_helper);
@@ -280,18 +280,18 @@ int main(int argc, char *argv[]) {
                     which the server accepts. */
 					clilen = sizeof(cli_addr);
 					newsockfd = accept(sockfd_tcp,
-										(struct sockaddr *) &cli_addr,
-										&clilen);
+							   (struct sockaddr *) &cli_addr,
+				    			   &clilen);
 					DIE(newsockfd < 0, "accept");
 
                     ret = setsockopt(newsockfd, IPPROTO_TCP, TCP_NODELAY,
-									(char *)&flag, sizeof(int));
+				     (char *)&flag, sizeof(int));
                     DIE(ret < 0, "neagle");
 
                     // For receiving client id.
-					memset(buffer, 0, BUFLEN);
-					n = recv(newsockfd, buffer, sizeof(buffer), 0);
-					DIE(n < 0, "recvID");
+		    memset(buffer, 0, BUFLEN);
+    		    n = recv(newsockfd, buffer, sizeof(buffer), 0);
+		    DIE(n < 0, "recvID");
 
                     __uint8_t notNewClient = 0;  // new client flag.
                     int tmp_id = convert_to_ID(buffer);
@@ -299,21 +299,21 @@ int main(int argc, char *argv[]) {
                         if (connected(*clientlist, tmp_id)) {
                             /* We send him connected signal because ID already
                             exists and he is connected. */
-					        memset(buffer, 0, BUFLEN);
+			    memset(buffer, 0, BUFLEN);
                             strcpy(buffer, "connected");
                             send(newsockfd, buffer, strlen(buffer), 0);
                             close(newsockfd);
                             continue;
                         } else {
                             SubscriberData *tmp_sub = findID(*clientlist,
-															tmp_id);
+							     tmp_id);
                             tmp_sub->sockId = newsockfd;
                             notNewClient = 1;
                         }
                     } else {
                         /* Add this client id to the list. */
                         SubscriberData *newSubscriber = createSubscriber(
-														newsockfd, tmp_id);
+						 	  newsockfd, tmp_id);
                         insert(clientlist, newSubscriber);
                     }
 
@@ -324,10 +324,6 @@ int main(int argc, char *argv[]) {
 					}
 
                     if (notNewClient) {
-                        // printf("Client (%d) reconnected from %s:%d.\n",
-                        //                         tmp_id,
-                        //                         inet_ntoa(cli_addr.sin_addr),
-                        //                         ntohs(cli_addr.sin_port));
                         printf("New client (%d) connected from %s:%d.\n",
                                                 tmp_id,
                                                 inet_ntoa(cli_addr.sin_addr),
@@ -338,23 +334,23 @@ int main(int argc, char *argv[]) {
                             if (mustBeForwarded(clients)) {
                                 char file_name[50];
                                 sprintf(file_name, "sub%d.sf",
-										clients->data->ID);
+					 clients->data->ID);
 
                                 FILE *fp = fopen(file_name, "r");
                                 DIE(fp == NULL, "fopen");
 
                                 size_t msg_len = BUFLEN;
                                 char *msg = (char*) malloc(
-													msg_len * sizeof(char));
+							msg_len * sizeof(char));
                                 memset(msg, 0, msg_len);
                                 ssize_t read;
                                 while ((read = getline(&msg, &msg_len, fp))
-												!= -1) {
+					!= -1) {
                                     /* Will be reading a '\n' as well which we
                                     want to get rid of when sending. */
                                     msg[strlen(msg) - 1] = 0;
                                     send(clients->data->sockId,
-										msg, msg_len, 0);
+					msg, msg_len, 0);
                                 }
 
                                 fclose(fp);
@@ -375,22 +371,22 @@ int main(int argc, char *argv[]) {
                 } else {
                     /* Data received from one of the subscriber sockets so
                     server must receive. */
-					memset(buffer, 0, BUFLEN);
-					n = recv(sockId, buffer, sizeof(buffer), 0);
-					DIE(n < 0, "recv");
+			memset(buffer, 0, BUFLEN);
+			n = recv(sockId, buffer, sizeof(buffer), 0);
+			DIE(n < 0, "recv");
 
-					if (n == 0) {
+			if (n == 0) {
                         // Conexion closed.
                         SubscriberData *tmp_sub = findSocket(*clientlist,
-															sockId);
+							     sockId);
                         tmp_sub->sockId = -1;
                         printf("Client (%d) disconnected.\n", tmp_sub->ID);
-						close(sockId);
+			close(sockId);
 
 
                         // Removing from socket multitude the closed socket.
-						FD_CLR(sockId, &read_fds);
-					} else {
+			FD_CLR(sockId, &read_fds);
+		} else {
                         /* Received a message(request) from one of the
 						subscribers. */
                         char topic[MSG_OFF];
@@ -405,13 +401,13 @@ int main(int argc, char *argv[]) {
                             unsubscribe(clientlist, sockId, topic);
                         }
                     }
-				}
-			}
-		}
+	        }
+            }
+	}
         if (stop) {
             break;
         }
-	}
+   }
 
     // Check to delete all stored messages.
     ClientList *client = *clientlist;
@@ -425,7 +421,7 @@ int main(int argc, char *argv[]) {
     }
 
     FD_ZERO(&read_fds);  // Just in case we forget. Better safe than sorry.
-	close(sockfd_tcp);
+    close(sockfd_tcp);
     freeList(clientlist);
-	return 0;
+    return 0;
 }
